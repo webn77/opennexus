@@ -1,0 +1,50 @@
+# 환경변수 (절대 커밋 금지)
+.env
+.env.local
+.env.*.local
+
+# context 데이터 (개인 데이터)
+context/
+*.jsonl
+
+# 백업 파일
+*.bak
+*.backup
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.env/
+venv/
+.venv/
+
+# 임시 파일
+tmp/
+temp/
+*.tmp
+*.log
+
+# 인증 파일
+*.key
+*.pem
+*.cert
+credentials.json
+token.json
+
+# 로컬 Claude 설정 (인증 포함)
+.claude/
