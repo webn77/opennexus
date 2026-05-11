@@ -1,0 +1,36 @@
+{
+  "name": "opennexus",
+  "version": "8.0.0",
+  "description": "AI-native productivity OS for Claude Code — skills, hooks, and automation in one CLI",
+  "keywords": ["claude", "claude-code", "ai", "productivity", "automation", "mcp"],
+  "homepage": "https://github.com/webn77/opennexus",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webn77/opennexus.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "opennexus": "./dist/bin/opennexus.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "hooks"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
