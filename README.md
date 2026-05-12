@@ -15,6 +15,8 @@ openNexus turns Claude Code into a persistent AI operating system.
 - **Session memory** — checkpoint across sessions via GitHub private repo sync
 - **One-command install** — up and running in under 10 minutes
 
+→ **[상세 사용 가이드 →](GUIDE.md)**
+
 ## Quick Install
 
 ```bash
