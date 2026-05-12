@@ -16,6 +16,23 @@
 
 ---
 
+## 설치 단계 (10단계)
+
+```
+[1/10] 의존성 확인       — claude / git / python3 / jq
+[2/10] .env 설정         — .env.example → .env 복사
+[3/10] 디렉토리 생성     — ~/.claude/, ~/context/
+[4/10] 인증 연결         — 격리 환경 전용
+[5/10] 훅 배포           — hooks/ + hooks/context/
+[6/10] 스킬 배포         — ~/.claude/skills/ 50개
+[7/10] settings.json     — SessionStart / PostToolUse / Stop 훅 등록
+[8/10] CLAUDE.md 설치    — templates/CLAUDE.md.template → ~/.claude/CLAUDE.md
+[9/10] context-sync      — GitHub private repo 연동 (선택)
+[10/10] 완료
+```
+
+---
+
 ## 1. 설치
 
 ### 사전 요구사항
