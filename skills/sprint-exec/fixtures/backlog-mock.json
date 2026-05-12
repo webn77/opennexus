@@ -1,0 +1,59 @@
+{
+  "sprints": [
+    {
+      "id": "SP-TEST-W01",
+      "week": "2026-W99",
+      "status": "active",
+      "items": ["BL-T01", "BL-T02", "BL-T03", "BL-T04", "BL-T05"],
+      "created_at": "2026-01-01T00:00:00"
+    }
+  ],
+  "items": [
+    {
+      "id": "BL-T01",
+      "domain": "work",
+      "title": "S항목 — 파일 1개 수정",
+      "description": "단일 파일 수정 테스트",
+      "status": "in_progress",
+      "rice_score": 100,
+      "file_count": 1
+    },
+    {
+      "id": "BL-T02",
+      "domain": "work",
+      "title": "S항목 — 파일 2개 수정",
+      "description": "2파일 수정 테스트",
+      "status": "in_progress",
+      "rice_score": 80,
+      "file_count": 2
+    },
+    {
+      "id": "BL-T03",
+      "domain": "work",
+      "title": "M항목 — 파일 4개 신규 기능",
+      "description": "M등급 테스트",
+      "status": "in_progress",
+      "rice_score": 150,
+      "file_count": 4
+    },
+    {
+      "id": "BL-T04",
+      "domain": "work",
+      "title": "L항목 — 파일 8개 아키텍처",
+      "description": "L등급 테스트",
+      "status": "in_progress",
+      "rice_score": 200,
+      "file_count": 8
+    },
+    {
+      "id": "BL-T05",
+      "domain": "work",
+      "title": "S항목 — 리서치형",
+      "description": "리서치 저장 테스트",
+      "status": "in_progress",
+      "rice_score": 60,
+      "file_count": 1
+    }
+  ],
+  "candidate_pool": []
+}

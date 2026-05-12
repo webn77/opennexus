@@ -1,0 +1,90 @@
+name: ascii-mockup-wireframe
+version: "1.1"
+description: >
+  ASCII 텍스트로 목업·와이어프레임을 생성하는 스킬.
+  웹/앱 화면, 오버레이, 문서, 슬라이드, 상태 변형을 한 번에 커버.
+
+triggers:
+  - "화면 그려줘"
+  - "목업"
+  - "레이아웃 잡아줘"
+  - "와이어프레임"
+  - "박스로 보여줘"
+  - "슬라이드 짜줘"
+  - "PPT 구성"
+  - "보고서 레이아웃"
+  - "문서 구조"
+  - "상태별로"
+
+categories:
+  - id: product-dashboard
+    label: "Product / Dashboard"
+    description: "웹앱·대시보드·모바일 앱 화면"
+    patterns:
+      - A/B 레이아웃 비교 (80자 기준)
+      - 단일 화면 상세
+      - 모바일 화면 (40자)
+      - 사이드바 레이아웃
+
+  - id: overlay
+    label: "Overlay"
+    description: "모달·드롭다운·토스트·사이드패널"
+    patterns:
+      - 모달 / 다이얼로그
+      - 확인 팝업
+      - 사이드 드로어
+
+  - id: content-docs
+    label: "Content / Docs"
+    description: "보고서·Notion·Word 문서 구조"
+    patterns:
+      - 표지 + 목차 + 본문 + 사이드
+      - 섹션별 레이아웃
+
+  - id: presentation
+    label: "Presentation"
+    description: "PPT 슬라이드·덱 스토리보드"
+    patterns:
+      - 슬라이드 단일 (16:9)
+      - 덱 전체 스토리보드
+
+  - id: states
+    label: "States"
+    description: "empty·loading·error·success 상태 변형"
+    patterns:
+      - 5-state variants (empty / loading / filled / error / success)
+      - 스켈레톤 로딩 (░░░)
+
+output:
+  format: text/ascii
+  always_code_block: true
+  default_viewport: web-80
+  viewports:
+    web: 80
+    tablet: 60
+    mobile: 40
+  languages: ["ko", "en"]
+
+conventions:
+  buttons:
+    default: "[버튼]"
+    primary: "[*버튼*]"
+    danger: "[!버튼!]"
+    dropdown: "[버튼▼]"
+  status:
+    good: "[좋음]"
+    warning: "[주의]"
+    down: "[하락]"
+    tentative: "[잠정]"
+  trend:
+    up: "▲ +N%"
+    down: "▼ -N%"
+    flat: "─ N%"
+  loading: "░░░ (skeleton)"
+
+extras:
+  state_variants: true        # "상태별로" 트리거 시 자동
+  interaction_annotation: true # "개발자한테" 트리거 시 자동
+  prd_auto_parse: true        # PRD 파일 경로 제공 시 화면 목록 자동 추출
+  save_to_obsidian: true      # "저장해줘" 시 ~/obsidian-vault/03_Projects/[도메인]/mockup.md
+  excalidraw_export: true     # "excalidraw로" 시 .excalidraw JSON 생성

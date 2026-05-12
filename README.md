@@ -1,16 +1,21 @@
 # openNexus v8
 
-> 개인 AI OS — Claude Code 기반 자동화 시스템
+> AI-native productivity OS for Claude Code — skills, hooks, and session memory in one install.
 
-[![version](https://img.shields.io/badge/version-v8.0-blue)](https://github.com/webn77/opennexus)
+[![version](https://img.shields.io/badge/version-v8.1-blue)](https://github.com/webn77/opennexus)
 [![Claude Code](https://img.shields.io/badge/Claude-Code-orange)](https://claude.ai/code)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## 소개
+## What is openNexus?
 
-openNexus v8은 Claude Code를 기반으로 한 개인 AI 운영 체제입니다.  
-스킬(skill) 시스템, 백로그 자동화, 파이프라인 오케스트레이션을 포함합니다.
+openNexus turns Claude Code into a persistent AI operating system.
 
-## 빠른 설치
+- **50+ skills** — PO workflows, sprint execution, brainstorm, diagrams, and more
+- **Hook system** — session context injection, post-edit validation, Telegram notifications
+- **Session memory** — checkpoint across sessions via GitHub private repo sync
+- **One-command install** — up and running in under 10 minutes
+
+## Quick Install
 
 ```bash
 git clone https://github.com/webn77/opennexus
@@ -18,31 +23,45 @@ cd opennexus
 bash install.sh
 ```
 
-10분 이내 설치 완료.
+During install you'll be prompted for an optional GitHub private repo URL for session memory sync.
 
-## 핵심 구조
+## Requirements
 
-```
-~/.claude/skills/    ← 스킬 정의 (SKILL.md)
-~/context/           ← 세션 데이터 (checkpoint, backlog)
-~/projects/          ← 소스코드
-```
-
-## 스킬 시스템
-
-| 카테고리 | 스킬 |
-|----------|------|
-| PO | /prd, /spec-define, /spec-build, /spec-up |
-| 분석 | /data-insight, /service-analysis, /brainstorm |
-| 자동화 | /sprint-exec, /backlog-sprint, /save |
-| 문서 | /diagram-gen, /flow-design, /prototype-flow |
-
-## 요구사항
-
-- Claude Code CLI
+- [Claude Code CLI](https://claude.ai/code)
 - Python 3.10+
 - bash / zsh
+- jq (`brew install jq`)
+- git
 
-## 라이선스
+## Core Structure
+
+```
+~/.claude/skills/    ← skill definitions (SKILL.md)
+~/.claude/hooks/     ← automation hooks
+~/context/           ← session data (checkpoint, backlog, memory)
+```
+
+## Skills
+
+| Category | Skills |
+|----------|--------|
+| PO | /prd, /spec-define, /spec-build, /spec-up, /spec-action |
+| Analysis | /data-insight, /service-analysis, /brainstorm, /growth-loop |
+| Sprint | /sprint-exec, /backlog-sprint, /backlog-view, /backlog-add |
+| Docs | /diagram-gen, /flow-design, /prototype-flow, /user-journey |
+| Session | /save, /current-context, /checkpoint |
+
+## Session Memory Sync
+
+Keep your AI memory in sync across multiple machines:
+
+```bash
+# Initial setup (run once)
+bash scripts/context-sync.sh https://github.com/yourname/your-private-repo.git
+
+# After that, /save automatically pushes — new machines pull on session start
+```
+
+## License
 
 MIT

@@ -212,9 +212,28 @@ echo "  위치: $SETTINGS_FILE"
 echo ""
 
 # ============================================================
+# Step 5-d. context-sync (선택)
+# ============================================================
+echo "[8/9] context-sync (선택)..."
+echo "  세션 기억을 다른 컴퓨터와 공유하려면 GitHub private repo URL을 입력하세요."
+printf "  건너뛰려면 Enter: "
+if [[ -t 0 ]]; then
+    read -r CONTEXT_REPO_URL
+else
+    CONTEXT_REPO_URL=""
+fi
+if [[ -n "$CONTEXT_REPO_URL" ]]; then
+    bash "${SCRIPT_DIR}/scripts/context-sync.sh" "$CONTEXT_REPO_URL"
+else
+    echo "  → 건너뜀 (나중에: bash ${SCRIPT_DIR}/scripts/context-sync.sh <repo-url>)"
+fi
+
+echo ""
+
+# ============================================================
 # Step 6. 설치 완료
 # ============================================================
-echo "[8/8] 설치 완료"
+echo "[9/9] 설치 완료"
 echo ""
 echo "=================================="
 echo " openNexus v${NEXUS_VERSION} 설치 완료!"
@@ -237,4 +256,4 @@ else
     echo "     claude"
 fi
 echo ""
-echo "문서: https://github.com/webn77/nexus"
+echo "문서: https://github.com/webn77/opennexus"

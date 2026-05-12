@@ -1,57 +1,112 @@
+---
+name: review
+version: 1.0
+description: 직전 작성된 산출물(.md)을 reviewer 페르소나로 검수. PASS시 마커 제거, FAIL시 자동 수정 최대 2회. Stop hook 차단 해제용.
+트리거: /review, 검수해줘, 검수 다시
+완료: ~/.nexus8/.pending-review 제거 (PASS) 또는 retry 카운터 증가 (FAIL)
+실행: 직접
+---
+
 # /review
-> 검수 대기 파일을 code-reviewer 서브에이전트로 검토. PASS 시 마커 자동 삭제.
+
+> Stop hook이 차단한 산출물을 검수해 마커 해제. 자동 수정·재검수 루프 포함.
 
 ## 트리거
-- `/review`
-- Stop 훅 차단 후 Claude가 자동 실행 (block 메시지에 마커 경로 포함)
+
+- `/review` — `~/.nexus8/.pending-review` 마커 대상 자동 검수
+- `/review [경로]` — 특정 파일 강제 검수 (마커 무시)
+- `검수해줘`, `검수 다시`
+
+## 진입 규칙
+
+### 1. 마커 확인
+
+```bash
+MARKER="$HOME/context/.pending-review"
+if [ ! -f "$MARKER" ]; then
+  echo "검수 대상 없음. /prd 등으로 산출물 작성 후 다시 호출."
+  exit 0
+fi
+
+TARGET=$(jq -r '.path' "$MARKER")
+RETRY=$(jq -r '.retry' "$MARKER")
+```
+
+### 2. 인자로 경로 주어진 경우
+
+`$1`이 있으면 해당 파일 검수 (마커 path 무시, retry=0으로 임시 처리).
 
 ## 실행 순서
 
-### Step 1. 마커 확인
-Stop 훅 block 메시지에 포함된 마커 경로 사용.
-없으면 glob으로 탐색:
+### Step 1. 컨텍스트 로드
+
 ```bash
-ls ~/context/.pending-review-* 2>/dev/null | head -1
+cat $HOME/.nexus8/_libs/personas/reviewer.yaml
+cat $HOME/.nexus8/docs/output-format-guide.md
+cat "$TARGET"
 ```
-마커 없으면 "검수 대기 파일 없음" 출력 후 종료.
 
-### Step 2. 검토 대상 파일 추출
+### Step 2. reviewer 페르소나 검수
+
+`reviewer.yaml`의 `system_prompt`에 따라 4개 항목 모두 명시적으로 ✅/⚠️/❌ 표시:
+
+- frontmatter
+- 표준 6 섹션
+- 산출물 종류별 본문 (type 기준)
+- PO 관점 품질
+
+### Step 3. 판정별 처리
+
+| 판정 | 동작 |
+|---|---|
+| ✅ PASS | 마커 제거 (`rm -f $MARKER`) → "검수 완료. 종료 가능합니다." |
+| ⚠️ WARN | 사용자에게 보완 항목 표시 + "이대로 통과할까요? (y/n)" → y면 마커 제거, n면 Step 4 |
+| ❌ FAIL (retry < 2) | Step 4 자동 수정 → 재검수 |
+| ❌ FAIL (retry ≥ 2) | 마커 제거하지 말고 사용자 호출: "2회 자동 수정 실패. 수동 보완 후 /review 재실행 또는 /review-skip로 강제 종료." |
+
+### Step 4. 자동 수정 (FAIL 시)
+
+검수 결과의 "보완 필요" 항목을 직접 Edit으로 수정:
+- frontmatter 누락 → 표준 frontmatter 삽입
+- 섹션 누락 → 해당 섹션 추가 (내용은 백로그·기존 내용 기반 보강)
+- 수치 목표 누락 → 기존 정성 표현을 수치 추정값으로 치환 + (추정) 표기
+
+수정 후 마커 retry 카운터 증가:
 ```bash
-FILE_PATH=$(jq -r '.file' "$MARKER")
+NEW_RETRY=$((RETRY + 1))
+jq --argjson r "$NEW_RETRY" '.retry = $r' "$MARKER" > "$MARKER.tmp" && mv "$MARKER.tmp" "$MARKER"
 ```
 
-### Step 3. code-reviewer 서브에이전트 스폰
-Agent 도구 호출:
-- `subagent_type`: `feature-dev:code-reviewer`
-- `prompt`:
+→ Step 2부터 재실행.
 
-```
-다음 문서를 검토하고 PASS 또는 FAIL을 판정하세요.
+### Step 5. PASS 시 마커 제거
 
-파일: {FILE_PATH}
-마커: {MARKER_PATH}
-
-## 검토 기준 (모두 통과해야 PASS)
-1. frontmatter(`---` 블록)에 type, status, date 필드 존재
-2. H1 제목(#) 존재
-3. 필수 섹션 (type 기준):
-   - type: PRD → 배경, 목표, 기능 요구사항, 성공 기준
-   - type: plan → 구현 방식, 데이터 흐름, Phase 분리
-   - 그 외 → ## 섹션 2개 이상
-4. TODO / FIXME / [placeholder] 텍스트 없음
-5. 빈 섹션 없음 (## 바로 다음 줄이 비어있고 ## 가 이어지는 경우)
-
-## 판정 결과
-PASS:
-- "PASS: {파일명} 검수 완료" 출력
-- rm {MARKER_PATH} 실행 (마커 삭제)
-
-FAIL:
-- "FAIL: {파일명}" 출력
-- 실패 항목 번호 + 구체적 내용
-- 마커 삭제하지 마세요
+```bash
+rm -f "$HOME/context/.pending-review"
 ```
 
-### Step 4. 결과 보고
-- PASS → "검수 완료. 세션 종료 가능합니다."
-- FAIL → 실패 항목 출력 + "위 항목 수정 후 다시 종료하세요."
+### Step 6. 완료 출력
+
+```
+## /review 완료
+
+📄 대상: [경로]
+판정: ✅ PASS | ⚠️ WARN(통과) | ❌ FAIL(사용자 호출)
+재시도: [N]회
+
+[FAIL인 경우]
+다음 단계:
+- 수동 보완 후 /review
+- 또는 /review-skip 으로 강제 종료
+```
+
+## 사람이 해야 하는 것
+
+- WARN 판정 시 통과 여부 결정 (y/n)
+- 2회 자동 수정 실패 시 수동 보완
+
+## 주의
+
+- 마커 파일이 없으면 즉시 종료 (검수 대상 없음)
+- 인자 경로 검수는 마커 retry에 영향 주지 않음
+- 자동 수정으로 본문 내용을 추론·삽입할 때는 (추정) 또는 [확인필요] 마커를 남겨 사용자가 검토할 수 있게 함

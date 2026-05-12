@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # session-start-welcome.sh — open-nexus8 신규 세션 안내
 
+# context-sync: 세션 시작 시 최신 context pull (실패해도 세션 차단 안 함)
+if git -C "$HOME/context" rev-parse --git-dir &>/dev/null 2>&1; then
+    git -C "$HOME/context" pull --quiet --rebase 2>/dev/null || true
+fi
+
 NAME=""
 [ -f "$HOME/.nexus8/config.sh" ] && \
   NAME=$(awk -F'"' '/^export NEXUS_USER_NAME=/{print $2}' "$HOME/.nexus8/config.sh")

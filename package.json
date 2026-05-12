@@ -15,7 +15,10 @@
   "files": [
     "dist",
     "skills",
-    "hooks"
+    "hooks",
+    "templates",
+    "_libs",
+    "docs"
   ],
   "scripts": {
     "build": "tsc",
