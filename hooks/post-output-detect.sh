@@ -2,7 +2,7 @@
 # post-output-detect.sh
 # Trigger : PostToolUse (Write|Edit)
 # Blocking: false (async)
-# 용도    : 03_Projects/ 산출물 MD 저장 감지 → .pending-review-{session_id} 마커 생성
+# 용도    : 03_Projects/ 산출물 MD 저장 감지 → 세션 flag 생성 (/goal 트리거용)
 
 set -euo pipefail
 
@@ -27,23 +27,8 @@ PROJECTS_DIR="$NEXUS_VAULT/03_Projects"
 [[ ! -f "$FILE_PATH" ]] && exit 0
 head -15 "$FILE_PATH" | grep -q '^type:' || exit 0
 
-# 세션별 독립 마커
+# 세션 flag 생성 (빈 파일 — /goal 트리거 신호)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "default"' 2>/dev/null)
-MARKER="$HOME/context/.pending-review-${SESSION_ID}"
-mkdir -p "$(dirname "$MARKER")"
-
-# 기존 마커 확인
-if [[ -f "$MARKER" ]]; then
-    PREV_FILE=$(jq -r '.file // ""' "$MARKER" 2>/dev/null || echo "")
-
-    if [[ "$PREV_FILE" == "$FILE_PATH" ]]; then
-        # 동일 파일: retry 유지, ts만 갱신
-        jq --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.ts = $ts' "$MARKER" > "${MARKER}.tmp" \
-            && mv "${MARKER}.tmp" "$MARKER"
-        exit 0
-    fi
-    # 다른 파일: retry=0 리셋
-fi
-
-echo "{\"file\":\"$FILE_PATH\",\"retry\":0,\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "$MARKER"
+FLAG="/tmp/review-flag-${SESSION_ID}"
+touch "$FLAG"
 exit 0
