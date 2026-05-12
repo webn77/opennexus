@@ -40,21 +40,21 @@ jq --argjson r "$((RETRY + 1))" '.retry = $r' "$MARKER" > "${MARKER}.tmp" && mv 
 # 잔여 마커 목록 수집
 PENDING_COUNT=$(find "$HOME/context" -maxdepth 1 -name ".pending-review-*" 2>/dev/null | wc -l | tr -d ' ')
 
-# 차단 — /goal 스타일 반복 루프 지시문
-python3 -c "
-import json, sys
-file = sys.argv[1]; marker = sys.argv[2]; count = int(sys.argv[3])
+# 차단 — /goal 실행 지시
+FILE_PATH_ESC="$FILE_PATH" MARKER_ESC="$MARKER" PENDING_COUNT_ESC="$PENDING_COUNT" \
+python3 << 'PYEOF'
+import json, os
+file    = os.environ['FILE_PATH_ESC']
+marker  = os.environ['MARKER_ESC']
+count   = int(os.environ['PENDING_COUNT_ESC'])
+
 reason = (
-    '[검수 반복 루프] 완료 조건: ~/context/.pending-review-* 마커 전부 제거될 때까지 반복.\n\n'
-    f'현재 대기: {file} ({count}개 잔여)\n\n'
-    '실행 순서:\n'
-    '1. Agent 도구로 code-reviewer 서브에이전트 스폰 → 위 파일 검토\n'
-    '   기준: frontmatter 완전성 / 필수 섹션 / TODO·빈 섹션 없음\n'
-    f'2. PASS → 마커({marker}) 삭제\n'
-    '3. FAIL → 피드백 출력 후 수정 제안\n'
-    '4. Stop 재시도 → 잔여 마커 있으면 루프 반복\n'
-    '5. 마커 전부 없어지면 종료'
+    f'검수 대기: {file} ({count}개 잔여)\n\n'
+    '지금 즉시 /goal 스킬을 다음 완료 조건으로 실행하세요:\n\n'
+    f'/goal ~/context/.pending-review-* 마커가 전부 사라질 때까지 반복 —'
+    ' 각 마커 파일을 code-reviewer 서브에이전트로 검수,'
+    ' PASS 시 마커 삭제, Stop 재시도'
 )
 print(json.dumps({'decision': 'block', 'reason': reason}, ensure_ascii=False))
-" "$FILE_PATH" "$MARKER" "$PENDING_COUNT"
+PYEOF
 exit 0
