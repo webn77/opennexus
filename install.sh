@@ -98,13 +98,15 @@ for dir in "$CLAUDE_DIR" "$SKILLS_DIR" "$HOOKS_DIR" "$CONTEXT_DIR"; do
     fi
 done
 
-# context 필수 파일 초기화
-for file in "${CONTEXT_DIR}/checkpoint.json" "${CONTEXT_DIR}/backlog.json"; do
-    if [[ ! -f "$file" ]]; then
-        echo '{}' > "$file"
-        echo "  OK: $file 초기화"
-    fi
-done
+# context 필수 파일 초기화 (구조화된 템플릿 사용)
+if [[ ! -f "${CONTEXT_DIR}/checkpoint.json" ]]; then
+    cp "${SCRIPT_DIR}/templates/checkpoint.json" "${CONTEXT_DIR}/checkpoint.json"
+    echo "  OK: checkpoint.json 초기화"
+fi
+if [[ ! -f "${CONTEXT_DIR}/backlog.json" ]]; then
+    cp "${SCRIPT_DIR}/templates/backlog.json" "${CONTEXT_DIR}/backlog.json"
+    echo "  OK: backlog.json 초기화"
+fi
 
 echo ""
 
@@ -133,6 +135,7 @@ HOOKS_SRC="${SCRIPT_DIR}/hooks"
 if [[ ! -d "$HOOKS_SRC" ]]; then
     echo "  WARN: hooks/ 소스 없음 — 건너뜀"
 else
+    # 최상위 훅
     for hook_file in "${HOOKS_SRC}"/*.sh; do
         [[ -f "$hook_file" ]] || continue
         HOOK_NAME=$(basename "$hook_file")
@@ -140,6 +143,20 @@ else
         cp "$hook_file" "$DEST"
         chmod +x "$DEST"
         echo "  OK: $HOOK_NAME → $HOOKS_DIR/"
+    done
+    # 서브디렉토리 훅 (context/ 등)
+    for sub_dir in "${HOOKS_SRC}"/*/; do
+        [[ -d "$sub_dir" ]] || continue
+        SUB_NAME=$(basename "$sub_dir")
+        mkdir -p "${HOOKS_DIR}/${SUB_NAME}"
+        for hook_file in "${sub_dir}"*.sh "${sub_dir}"*.py; do
+            [[ -f "$hook_file" ]] || continue
+            HOOK_NAME=$(basename "$hook_file")
+            DEST="${HOOKS_DIR}/${SUB_NAME}/${HOOK_NAME}"
+            cp "$hook_file" "$DEST"
+            [[ "$hook_file" == *.sh ]] && chmod +x "$DEST"
+            echo "  OK: ${SUB_NAME}/${HOOK_NAME} → $HOOKS_DIR/${SUB_NAME}/"
+        done
     done
 fi
 
@@ -171,6 +188,7 @@ echo ""
 # ============================================================
 echo "[7/8] settings.json 훅 등록..."
 
+CTX_HOOK="${HOOKS_DIR}/context/session-start-context.sh"
 SESSION_HOOK="${HOOKS_DIR}/session-start-welcome.sh"
 POST_HOOK="${HOOKS_DIR}/post-output-detect.sh"
 STOP_HOOK="${HOOKS_DIR}/stop-review-gate.sh"
@@ -182,13 +200,15 @@ fi
 
 # 기존 settings.json에 훅 병합 (jq)
 UPDATED=$(jq \
+    --arg ctx_cmd "bash ${CTX_HOOK}" \
     --arg session_cmd "bash ${SESSION_HOOK}" \
     --arg post_cmd "bash ${POST_HOOK}" \
     --arg stop_cmd "bash ${STOP_HOOK}" \
     '
     .hooks.SessionStart = (
         (.hooks.SessionStart // []) |
-        map(select(.hooks[0].command != $session_cmd)) +
+        map(select(.hooks[0].command != $ctx_cmd and .hooks[0].command != $session_cmd)) +
+        [{"hooks":[{"type":"command","command":$ctx_cmd}]}] +
         [{"hooks":[{"type":"command","command":$session_cmd}]}]
     ) |
     .hooks.PostToolUse = (
@@ -204,7 +224,8 @@ UPDATED=$(jq \
     ' "$SETTINGS_FILE")
 
 echo "$UPDATED" > "$SETTINGS_FILE"
-echo "  OK: SessionStart → session-start-welcome.sh"
+echo "  OK: SessionStart → context/session-start-context.sh (checkpoint 주입)"
+echo "  OK: SessionStart → session-start-welcome.sh (백로그 안내)"
 echo "  OK: PostToolUse(Write|Edit) → post-output-detect.sh"
 echo "  OK: Stop → stop-review-gate.sh"
 echo "  위치: $SETTINGS_FILE"
@@ -212,9 +233,27 @@ echo "  위치: $SETTINGS_FILE"
 echo ""
 
 # ============================================================
-# Step 5-d. context-sync (선택)
+# Step 5-d. CLAUDE.md 설치
 # ============================================================
-echo "[8/9] context-sync (선택)..."
+echo "[8/9] CLAUDE.md 설치..."
+CLAUDE_MD="${CLAUDE_DIR}/CLAUDE.md"
+TEMPLATE_CLAUDE="${SCRIPT_DIR}/templates/CLAUDE.md.template"
+if [[ -f "$CLAUDE_MD" ]]; then
+    echo "  OK: ~/.claude/CLAUDE.md 이미 존재 — 건너뜀"
+elif [[ -f "$TEMPLATE_CLAUDE" ]]; then
+    cp "$TEMPLATE_CLAUDE" "$CLAUDE_MD"
+    echo "  OK: CLAUDE.md.template → ~/.claude/CLAUDE.md 복사"
+    echo "  !! ~/.claude/CLAUDE.md 를 열어 역할과 도메인 경로를 설정하세요"
+else
+    echo "  WARN: CLAUDE.md.template 없음 — 건너뜀"
+fi
+
+echo ""
+
+# ============================================================
+# Step 5-e. context-sync (선택)
+# ============================================================
+echo "[9/10] context-sync (선택)..."
 echo "  세션 기억을 다른 컴퓨터와 공유하려면 GitHub private repo URL을 입력하세요."
 printf "  건너뛰려면 Enter: "
 if [[ -t 0 ]]; then
@@ -233,7 +272,7 @@ echo ""
 # ============================================================
 # Step 6. 설치 완료
 # ============================================================
-echo "[9/9] 설치 완료"
+echo "[10/10] 설치 완료"
 echo ""
 echo "=================================="
 echo " openNexus v${NEXUS_VERSION} 설치 완료!"

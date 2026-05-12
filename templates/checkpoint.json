@@ -1,0 +1,12 @@
+{
+  "when": "",
+  "domains": {
+    "work": "신규 세션",
+    "hire": "신규 세션",
+    "study": "신규 세션",
+    "analyze": "신규 세션"
+  },
+  "next": "백로그 추가해줘 work 첫 번째 태스크",
+  "blocked": [],
+  "todo": []
+}

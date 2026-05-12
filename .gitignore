@@ -5,6 +5,8 @@
 
 # context 데이터 (개인 데이터)
 context/
+!hooks/context/
+!hooks/context/**
 *.jsonl
 
 # 백업 파일
